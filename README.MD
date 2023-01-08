@@ -7,7 +7,11 @@
 
 pip install url-analyzer 
 
-from url_analyzer import get_all_links_from_url, get_url_df
+from url_analyzer import get_all_links_from_url, get_url_df, get_all_links_from_html
+# Update 2023/01/08: get_all_links_from_html 
+df = get_all_links_from_html(url="https://github.com/hansalemaos/getevent_sendevent", htmlcode='<html>...</html>') # url necessary for relative links 
+
+
 df = get_all_links_from_url(url="https://github.com/hansalemaos/getevent_sendevent")
 
 r"""
