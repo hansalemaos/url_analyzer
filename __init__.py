@@ -11,6 +11,7 @@ from numba import jit, typed
 from windows_filepath import make_filepath_windows_comp
 import pandas as pd
 from a_pandas_ex_horizontal_explode import pd_add_horizontal_explode
+
 pd_add_horizontal_explode()
 df3 = pd.read_csv(r"https://data.iana.org/TLD/tlds-alpha-by-domain.txt")
 df3 = df3.rename(columns={v: k for k, v in enumerate(df3.columns)})
@@ -797,30 +798,18 @@ def get_url_df(urls, join_relative_link_with=""):
 
 
 def download_with_requests(url, *args, **kwargs):
-    wasex = False
+    resp = None
     try:
-        response = requests.get(url=url, *args, **kwargs)
-    except Exception as Fehler:
-        try:
-            wasex = True
-            response.close()
-        except Exception as Fehler2:
-            pass
-    finally:
-        if not wasex:
-            try:
-                response.close()
-            except Exception as Fehler2:
-                pass
-    return response
+        with requests.get(url=url, *args, **kwargs) as response:
+            resp = response
+    except Exception as fe:
+        print(fe)
+    return resp
 
 
-def get_all_links_from_url(url, *args, **kwargs):
-    mainurl = url
-    response = download_with_requests(mainurl, *args, **kwargs)
-    if response.status_code != 200:
-        return pd.DataFrame()
-    soup = bs4.BeautifulSoup(response.content)
+def get_all_links_from_html(url, htmlcode):
+    soup = bs4.BeautifulSoup(htmlcode)
+
     allurls = []
     for k in soup.findAll():
         ka = k.__dict__.get("attrs")
@@ -836,5 +825,12 @@ def get_all_links_from_url(url, *args, **kwargs):
                     allurls.append(flaz[0])
 
     allurls = list(set(tuple(flatten_everything(allurls))))
-    dax = get_url_df(urls=allurls, join_relative_link_with=mainurl)
+    dax = get_url_df(urls=allurls, join_relative_link_with=url)
     return dax
+
+
+def get_all_links_from_url(url, *args, **kwargs):
+    response = download_with_requests(url, *args, **kwargs)
+    if response.status_code != 200:
+        return pd.DataFrame()
+    return get_all_links_from_html(url, response.content)
